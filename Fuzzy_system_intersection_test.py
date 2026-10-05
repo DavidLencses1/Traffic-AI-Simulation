@@ -1,6 +1,7 @@
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
 
 #napr. vstup green = 14 a red = 17
 
@@ -72,3 +73,30 @@ print(f"Odporúčaná dĺžka zelenej je: {sim.output['interval']:.2f} s")
 
 #graf
 interval.view(sim=sim)
+
+
+#3D graf - surface viewer
+number_of_cars = np.arange(0, 31, 1) #počet áut na osiach
+green_x, red_y = np.meshgrid(number_of_cars, number_of_cars) #obsahuje každú dvojicu hodnôt green a red
+interval_length = np.zeros_like(green_x, dtype=float) #výsledná dľžka intervalu
+
+#prebehne výpočet pre každý bod mriežky
+for i in range(green_x.shape[0]):
+    for j in range(green_x.shape[1]):
+        sim.input['green'] = green_x[i, j]
+        sim.input['red'] = red_y[i, j]
+        sim.compute()
+        interval_length[i, j] = sim.output['interval']
+
+#vykreslenie 3D grafu
+graph = plt.figure(figsize=(7, 7))
+axes = graph.add_subplot(111, projection='3d')
+graph_surface = axes.plot_surface(green_x, red_y, interval_length, cmap='viridis', linewidth=0.4, antialiased=True)
+
+axes.set_xlabel('Green')
+axes.set_ylabel('Red')
+axes.set_zlabel('Interval')
+axes.view_init(30, 120) #uhol + otočenie
+graph.colorbar(graph_surface, shrink=0.5, pad=0.1)
+
+plt.show()
