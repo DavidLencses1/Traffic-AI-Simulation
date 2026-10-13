@@ -34,8 +34,8 @@ interval['very long'] = fuzz.trapmf(interval.universe, [21, 26, 30, 30])
 #pravidlá - pomocou min pravidla
 rules = [
     ctrl.Rule(green['few'] & red['few'], interval['short']),
-    ctrl.Rule(green['few'] & red['normal'], interval['normal']),
-    ctrl.Rule(green['few'] & red['a lot'], interval['long']),
+    ctrl.Rule(green['few'] & red['normal'], interval['short']),
+    ctrl.Rule(green['few'] & red['a lot'], interval['short']),
     ctrl.Rule(green['few'] & red['very many'], interval['short']),
 
     ctrl.Rule(green['normal'] & red['few'], interval['normal']),
