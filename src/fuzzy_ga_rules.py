@@ -83,24 +83,12 @@ MANUAL_RULES = [
 def bits_to_int(gene):
     return gene[0]*2 + gene[1]
 
-# číslo 0 - 3 prevedieme naspať na 2 bity, napr. 2 -> [1, 0]
-def int_to_bits(number):
-    return [number // 2, number % 2]
-
 # 16 génov => výstupy 16 pravidiel
 def decode_rules(individual):
     outputs = []
     for gene in individual:
         outputs.append(OUTPUT_NAMES[bits_to_int(gene)])
     return outputs
-
-# jedinec s ručne zadanými pravidlami - prvá generácia
-def manual_individual():
-    individual = []
-    for output in MANUAL_RULES:
-        index = OUTPUT_NAMES.index(output)
-        individual.append(int_to_bits(index))
-    return individual
 
 # 4 body => 4 membership funkcie
 def set_membership(variable, points, names, minimum, maximum):
@@ -240,11 +228,8 @@ def tournament(population, fitness, elite_indexes):
 
     num_of_tournaments = len(population) - len(elite_indexes)
 
-    # elitných jedincov do turnaja neberieme
-    temp_population = []
-    for i in range(len(population)):
-        if i not in elite_indexes:
-            temp_population.append(i)
+    # do turnaja berieme všetkých jedincov (aj elitných)
+    temp_population = list(range(len(population)))
 
     for i in range(num_of_tournaments):
         player1 = random.choice(temp_population)
@@ -325,9 +310,9 @@ def main():
     best_individual = None
     best_value = float("inf")
 
-    # prvá generácia: 1 jedinec s ručne zadanými pravidlami + ostatní jedinci náhodne
-    population = [manual_individual()]
-    for i in range(population_size - 1):
+    # prvá generácia: všetci jedinci náhodní
+    population = []
+    for i in range(population_size):
         population.append(random_individual(num_genes, gene_length))
 
     # cyklus genetického algoritmu
@@ -382,7 +367,7 @@ def main():
         # vyberieme elitných jedincov
         elites, elite_indexes = elite_selection(population, fitness, num_of_elites)
 
-        # turnajový výber z ostatných jedincov
+        # turnajový výber zo všetkých jedincov - aj elitných
         tournaments, number_of_tournaments = tournament(population, fitness, elite_indexes)
 
         # do novej generácie sa elitní jedinci dostanú ako prví
