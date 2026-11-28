@@ -244,11 +244,8 @@ def tournament(population, fitness, elite_indexes):
 
     num_of_tournaments = len(population) - len(elite_indexes)
 
-    # elitných jedincov do turnaja neberieme
-    temp_population = []
-    for i in range(len(population)):
-        if i not in elite_indexes:
-            temp_population.append(i)
+    # berieme aj elitných jedincov do turnaja
+    temp_population = list(range(len(population)))
 
     for i in range(num_of_tournaments):
         player1 = random.choice(temp_population)
@@ -314,7 +311,8 @@ def main():
     population_size = 30 # veľkosť populácie
     max_generations = 300 # počet generácií
     num_of_elites = 2 # počet elitných jedincov
-    num_of_new = 5 # počet nových jedincov v každej generácii
+    num_of_new = 5 # počet nových jedincov pri stagnácii
+    stagnation_limit = 30 # po koľkých generáciách bez zlepšenia pridáme nových jedincov
     mutation_rate = 0.10 # miera mutácia
 
     # cache pamäť pre jedincov, ktorých sme počítali
@@ -322,6 +320,8 @@ def main():
 
     best_fitness = []
     avg_fitness = []
+    stagnation_counter = 0
+    previous_best = float("inf")
 
     best_individual = None
     best_value = float("inf")
@@ -357,10 +357,25 @@ def main():
         avg = sum(fitness) / len(fitness)
         best_fitness.append(best)
         avg_fitness.append(avg)
+
+        # stagnácia riešenia: počet generácií po sebe, v ktorých sa nenašlo lepšie riešenie
+        if best_value < previous_best:
+            stagnation_counter = 0
+            previous_best = best_value
+        else:
+            stagnation_counter += 1
+
         print(f"Generation {generation + 1:03d}")
         print(f"Best fitness: {best:.2f} s")
         print(f"Avg. fitness: {avg:.2f} s")
+        print(f"Bez zlepšenia: {stagnation_counter} generácií")
         print("-----------------------------------------------")
+
+        # ak sa 30 a viac generácií nenašlo lepšie riešenie => pridáme nových jedincov
+        if stagnation_counter >= stagnation_limit:
+            current_new = num_of_new
+        else:
+            current_new = 0
 
         # vytvoríme novú generáciu
         new_generation = []
@@ -368,7 +383,7 @@ def main():
         # vyberieme elitných jedincov
         elites, elite_indexes = elite_selection(population, fitness, num_of_elites)
 
-        # turnajový výber z ostatných jedincov
+        # turnajový výber zo všetkých jedincov
         tournaments, number_of_tournaments = tournament(population, fitness, elite_indexes)
 
         # do novej generácie sa elitní jedinci dostanú ako prvý
@@ -376,17 +391,17 @@ def main():
             new_generation.append(x)
 
         # križenie kým máme miesto aj pre nových jedincov
-        while len(new_generation) < population_size - num_of_new:
+        while len(new_generation) < population_size - current_new:
             child1, child2 = cross_over(tournaments, population)
             new_generation.append(child1)
-            if len(new_generation) < population_size - num_of_new:
+            if len(new_generation) < population_size - current_new:
                 new_generation.append(child2)
 
         # mutácia bez elít
         new_generation = mutate(new_generation, num_of_elites, mutation_rate)
 
         # vytvorenie nových náhodných jedincov
-        for i in range(num_of_new):
+        for i in range(current_new):
             new_generation.append(random_individual(num_genes, gene_length))
 
         # nová generácia sa stane súčastnou generáciu
